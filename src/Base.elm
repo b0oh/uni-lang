@@ -1,8 +1,9 @@
 module Base exposing (baseEnv)
 
-import DeBruijn
 import Codec
+import DeBruijn
 import Dict
+import Example
 import Expr
 import Lambda
 
@@ -37,11 +38,31 @@ natRewriter string =
             Err "can't rewrite to nat"
 
 
+example =
+    let
+        zero =
+            Expr.fromLambda Example.zero
+
+        inc =
+            Expr.fromLambda Example.inc
+    in
+    Expr.App
+        (Expr.Abs "zero"
+             (Expr.App
+                  (Expr.Abs "inc"
+                       (Expr.App (Expr.Var "inc") (Expr.Var "zero"))
+                  )
+                  inc
+             )
+        )
+        zero
+
+
 baseEnv =
     Dict.fromList
-        [ ( "acc", Expr.Var "nil" )
+        [ ( "acc", Expr.Var "nothing" )
         , ( "bytelist", Expr.SymbolicMacro bytelistRewriter )
         , ( "eval", Expr.Builtin eval )
         , ( "nat", Expr.SymbolicMacro natRewriter )
-        , ( "term", Expr.Var "nil" )
+        , ( "term", example )
         ]
