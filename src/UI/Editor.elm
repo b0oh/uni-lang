@@ -123,10 +123,12 @@ renderLet { bindings, body } =
                 |> Element.column [ padLeft ]
     in
     Element.column
-        [ Element.paddingXY 12 8
+        [ Background.color Colors.bg
+        , Element.paddingXY 12 8
         , Element.spacing 3
         , Element.width Element.fill
         , Font.color Colors.white
+        , shadow
         ]
         [ Element.text "let"
         , renderedBindings
