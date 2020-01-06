@@ -23,6 +23,13 @@ Variable: 1, two, t-h-r-e, "even with spaces"
 Abstraction: (lambda (f) ((lambda (x) (f (x x))) (lambda (x) (f (x x)))))
 Application: (normalise term)
 Extending environment: (define term1 (reduce-once term))
+
+Built-ins:
+(bytelist hello) -> builds 8-tuple list
+(nat 7) -> builds a Church numeral
+(normalise term) -> attempts to reduce a term to it's normal form
+(reduce-once term) -> attempts to perform a single beta reduction
+term -> experssion in the editor
 """
 
 
