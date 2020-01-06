@@ -16,7 +16,25 @@ type alias Args =
     }
 
 
-symbolElement name =
+padLeft =
+    Element.paddingEach
+        { top = 0
+        , right = 0
+        , bottom = 0
+        , left = 12
+        }
+
+
+shadow =
+    Border.shadow
+        { offset = ( 2, 2 )
+        , size = 0
+        , blur = 4
+        , color = Colors.black
+        }
+
+
+renderSymbol name =
     Element.el
         [ Font.color Colors.white
         , Element.paddingXY 6 3
@@ -24,113 +42,131 @@ symbolElement name =
         (Element.text name)
 
 
-varElement : Var -> Element msg
-varElement { symbol } =
+renderVar : Var -> Element msg
+renderVar { symbol } =
     Element.el
-        [ Element.width Element.fill
-        , Background.color Colors.pink
+        [ Background.color Colors.pink
+        , Element.width Element.fill
+        , shadow
         ]
-        (symbolElement symbol)
+        (renderSymbol symbol)
 
 
-absElement : Abs -> Element msg
-absElement { symbols, body } =
+renderAbs : Abs -> Element msg
+renderAbs { symbols, body } =
     let
-        symbolsElements =
-            List.map symbolElement symbols
+        renderedSymbols =
+            List.map renderSymbol symbols
     in
     Element.column
         [ Background.color Colors.lightBlue
         , Element.width Element.fill
+        , shadow
         ]
-        [ Element.row [] symbolsElements
+        [ Element.row [] renderedSymbols
         , Element.el
             [ Element.paddingXY 12 8
             , Element.width Element.fill
             ]
-            (astElement body)
+            (renderAst body)
         ]
 
 
-appElement : App -> Element msg
-appElement { exprs } =
+renderApp : App -> Element msg
+renderApp { exprs } =
     case exprs of
         abs :: args ->
             Element.column
-                [ Background.color Colors.grey
-                , Element.paddingXY 12 8
-                , Element.width Element.fill
-                ]
-                [ astElement abs
+                [ Element.width Element.fill ]
+                [ renderAst abs
                 , Element.column
-                    [ Element.paddingEach { top = 0, right = 0, bottom = 0, left = 12 }
+                    [ padLeft
                     , Element.width Element.fill
                     ]
-                    (List.map astElement args)
+                    (List.map renderAst args)
                 ]
 
         _ ->
             Element.el [] (Element.text "wtf")
 
 
-bindingElement : String -> Ast -> Element msg
-bindingElement name body =
+renderBinding : String -> Ast -> Element msg
+renderBinding name body =
+    let
+        ( bindingName, bindingBody ) =
+            case body of
+                MakeAbs abs ->
+                    ( name ++ " " ++ String.join " " abs.symbols ++ " = "
+                    , abs.body
+                    )
+
+                _ ->
+                    ( name ++ " = "
+                    , body
+                    )
+    in
     Element.column
-        []
-        [ Element.el [] (Element.text (name ++ " = "))
-        , Element.el [ Element.paddingEach { top = 0, right = 0, bottom = 0, left = 12 } ] (astElement body)
+        [ Element.spacing 6
+        , Element.paddingXY 0 3
+        ]
+        [ Element.el [] (Element.text bindingName)
+        , Element.el [ padLeft ] (renderAst bindingBody)
         ]
 
 
-letElement : Let -> Element msg
-letElement { bindings, body } =
-   Element.column
-       [ Background.color Colors.orange
-       , Element.paddingXY 12 8
-       , Element.width Element.fill
-       , Element.spacing 3
-       , Font.color Colors.white
-       ]
-       [ Element.text "let"
-       , Element.column
-           [ Element.paddingEach { top = 0, right = 0, bottom = 0, left = 12 } ]
-           (List.map (\(name, innerBody) -> bindingElement name innerBody) bindings)
-       , Element.text "in"
-       , astElement body
-       ]
+renderLet : Let -> Element msg
+renderLet { bindings, body } =
+    let
+        renderedBindings =
+            bindings
+                |> List.map (\(name, innerBody) -> renderBinding name innerBody)
+                |> Element.column [ padLeft ]
+    in
+    Element.column
+        [ Element.paddingXY 12 8
+        , Element.spacing 3
+        , Element.width Element.fill
+        , Font.color Colors.white
+        ]
+        [ Element.text "let"
+        , renderedBindings
+        , Element.text "in"
+        , renderAst body
+        ]
 
 
-astElement ast =
+renderAst ast =
     let
         inner =
             case ast of
                 MakeVar var ->
-                    varElement var
+                    renderVar var
 
                 MakeAbs abs ->
-                    absElement abs
+                    renderAbs abs
 
                 MakeApp app ->
-                    appElement app
+                    renderApp app
 
                 MakeLet let_ ->
-                    letElement let_
+                    renderLet let_
      in
      Element.el
-         [ Border.shadow { offset = ( 2, 2 ), size = 0, blur = 10, color = Colors.black }
-         , Element.width Element.fill
-         ]
+         [ Element.width Element.fill ]
          inner
 
 
 render : Args -> Element msg
 render { env } =
     let
+        mapTerm =
+            Ast.fromLambda >> Ast.letify >> Ast.compactLets >> renderAst
+
         content =
             env
                 |> Dict.get "term"
                 |> Maybe.andThen Expr.toLambda
-                |> Maybe.map (Ast.fromLambda >> Ast.letify >> Ast.compactLets >> astElement)
+                |> Maybe.map mapTerm
                 |> Maybe.withDefault Element.none
     in
     Element.el
