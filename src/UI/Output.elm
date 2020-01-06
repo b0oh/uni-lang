@@ -15,6 +15,17 @@ type alias Args =
     }
 
 
+greeting = """
+Hi!
+
+Syntax:
+Variable: 1, two, t-h-r-e, "even with spaces"
+Abstraction: (lambda (f) ((lambda (x) (f (x x))) (lambda (x) (f (x x)))))
+Application: (normalise term)
+Extending environment: (define term1 (reduce-once term))
+"""
+
+
 render : Args -> Element msg
 render { env, error } =
     let
@@ -36,7 +47,7 @@ render { env, error } =
                     Element.text text
 
                 _ ->
-                    Element.none
+                    Element.text greeting
     in
     Element.el
         [ Element.height Element.fill

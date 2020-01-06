@@ -20,11 +20,6 @@ type Expr
     | SymbolicMacro (String -> Result String Lambda.Term)
 
 
-extend : String -> Expr -> Env -> Env
-extend binding expr env =
-    Dict.insert binding expr env
-
-
 apply : Env -> Expr -> Expr -> Result String Expr
 apply env abs arg =
     case abs of
@@ -33,7 +28,7 @@ apply env abs arg =
 
         Closure binding body closuredEnv ->
             Result.do (eval env arg) <| \( newArg, _ ) ->
-            Result.do (eval (extend binding newArg closuredEnv) body) <| \( expr, _ ) ->
+            Result.do (eval (Dict.insert binding newArg closuredEnv) body) <| \( expr, _ ) ->
             Ok expr
 
         SymbolicMacro rewriter ->
@@ -69,7 +64,7 @@ eval env expr =
 
         App (App (Var "define") (Var name)) value ->
             Result.do (eval env value) <| \( newValue, _ ) ->
-            Ok ( newValue, extend name newValue env )
+            Ok ( newValue, Dict.insert name newValue env )
 
         App abs arg ->
             Result.do (eval env abs) <| \( newAbs, _ ) ->

@@ -87,8 +87,7 @@ example =
 
 baseEnv =
     Dict.fromList
-        [ ( "acc", Expr.Var "nothing" )
-        , ( "bytelist", Expr.SymbolicMacro bytelistRewriter )
+        [ ( "bytelist", Expr.SymbolicMacro bytelistRewriter )
         , ( "eval", Expr.Builtin eval )
         , ( "nat", Expr.SymbolicMacro natRewriter )
         , ( "normalise", Expr.Builtin normalise )
