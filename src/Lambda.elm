@@ -101,8 +101,7 @@ reduceOnce term =
             Nothing
 
         Abs sym body ->
-            body
-                |> reduceOnce
+            reduceOnce body
                 |> Maybe.map (Abs sym)
 
         App (Abs sym body) arg ->
@@ -114,8 +113,7 @@ reduceOnce term =
                     Just (App newAbs arg)
 
                 Nothing ->
-                    arg
-                        |> reduceOnce
+                    reduceOnce arg
                         |> Maybe.map (App abs)
 
 

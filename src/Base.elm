@@ -41,14 +41,28 @@ natRewriter string =
 normalise : Expr.Env -> Expr.Expr -> Result String Expr.Expr
 normalise env expr =
     let
-        normalise1 =
+        wrapUnwrap =
             Tuple.first
                 >> Expr.toLambda
                 >> Maybe.map (Lambda.normalise >> Expr.fromLambda)
                 >> Result.fromMaybe "can't normalise term"
     in
     Expr.eval env expr
-        |> Result.andThen normalise1
+        |> Result.andThen wrapUnwrap
+
+
+reduceOnce : Expr.Env -> Expr.Expr -> Result String Expr.Expr
+reduceOnce env expr =
+    let
+        wrapUnwrap =
+            Tuple.first
+                >> Expr.toLambda
+                >> Maybe.andThen Lambda.reduceOnce
+                >> Maybe.map Expr.fromLambda
+                >> Result.fromMaybe "can't reduce term"
+    in
+    Expr.eval env expr
+        |> Result.andThen wrapUnwrap
 
 
 example =
@@ -78,5 +92,6 @@ baseEnv =
         , ( "eval", Expr.Builtin eval )
         , ( "nat", Expr.SymbolicMacro natRewriter )
         , ( "normalise", Expr.Builtin normalise )
+        , ( "reduce-once", Expr.Builtin reduceOnce )
         , ( "term", example )
         ]
