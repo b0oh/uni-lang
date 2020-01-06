@@ -38,6 +38,19 @@ natRewriter string =
             Err "can't rewrite to nat"
 
 
+normalise : Expr.Env -> Expr.Expr -> Result String Expr.Expr
+normalise env expr =
+    let
+        normalise1 =
+            Tuple.first
+                >> Expr.toLambda
+                >> Maybe.map (Lambda.normalise >> Expr.fromLambda)
+                >> Result.fromMaybe "can't normalise term"
+    in
+    Expr.eval env expr
+        |> Result.andThen normalise1
+
+
 example =
     let
         zero =
@@ -64,5 +77,6 @@ baseEnv =
         , ( "bytelist", Expr.SymbolicMacro bytelistRewriter )
         , ( "eval", Expr.Builtin eval )
         , ( "nat", Expr.SymbolicMacro natRewriter )
+        , ( "normalise", Expr.Builtin normalise )
         , ( "term", example )
         ]
