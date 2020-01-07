@@ -29,7 +29,7 @@ Built-ins:
 (nat 7) -> builds a Church numeral
 (normalise term) -> attempts to reduce a term to it's normal form
 (reduce-once term) -> attempts to perform a single beta reduction
-term -> experssion in the editor
+term -> expression in the editor
 """
 
 
