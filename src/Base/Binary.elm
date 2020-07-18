@@ -1,10 +1,10 @@
-module Binary exposing
+module Base.Binary exposing
     ( Bit(..)
     , Byte
-    , byteToInt
-    , fromInt
-    , fromString
-    , toString
+    , byte_to_int
+    , from_int
+    , from_string
+    , to_string
     )
 
 type Bit
@@ -24,8 +24,8 @@ type alias Byte =
     }
 
 
-bitToInt : Bit -> Int
-bitToInt bit =
+bit_to_int : Bit -> Int
+bit_to_int bit =
     case bit of
         Zero ->
             0
@@ -34,20 +34,20 @@ bitToInt bit =
             1
 
 
-byteToInt : Byte -> Int
-byteToInt { first, second, third, fourth, fifth, sixth, seventh, eighth } =
-    (bitToInt first)
-        + (bitToInt second) * 2
-        + (bitToInt third) * 4
-        + (bitToInt fourth) * 8
-        + (bitToInt fifth) * 16
-        + (bitToInt sixth) * 32
-        + (bitToInt seventh) * 64
-        + (bitToInt eighth) * 128
+byte_to_int : Byte -> Int
+byte_to_int { first, second, third, fourth, fifth, sixth, seventh, eighth } =
+    (bit_to_int first)
+        + (bit_to_int second) * 2
+        + (bit_to_int third) * 4
+        + (bit_to_int fourth) * 8
+        + (bit_to_int fifth) * 16
+        + (bit_to_int sixth) * 32
+        + (bit_to_int seventh) * 64
+        + (bit_to_int eighth) * 128
 
 
-fromInt : Int -> List Bit
-fromInt int =
+from_int : Int -> List Bit
+from_int int =
     let
         step acc int_ =
             let
@@ -58,25 +58,25 @@ fromInt int =
                     else
                         One
 
-                newAcc =
+                new_acc =
                     bit :: acc
 
                 next =
                     int_ // 2
             in
             if next > 0 then
-                step newAcc next
+                step new_acc next
 
             else
-                List.reverse newAcc
+                List.reverse new_acc
     in
     step [] int
 
 
-fromString : String -> List Bit
-fromString string =
+from_string : String -> List Bit
+from_string string =
     let
-        mapChar char =
+        map_char char =
             case char of
                 '0' ->
                     [ Zero ]
@@ -89,13 +89,13 @@ fromString string =
     in
     string
         |> String.toList
-        |> List.concatMap mapChar
+        |> List.concatMap map_char
 
 
-toString : List Bit -> String
-toString bits =
+to_string : List Bit -> String
+to_string bits =
     let
-        mapBit bit =
+        map_bit bit =
             case bit of
                 Zero ->
                     '0'
@@ -104,5 +104,5 @@ toString bits =
                     '1'
     in
     bits
-        |> List.map mapBit
+        |> List.map map_bit
         |> String.fromList

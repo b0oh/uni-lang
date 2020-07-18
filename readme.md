@@ -1,6 +1,6 @@
 # Universal language
 
-Accidentally simple
+Accidentally simple programming language
 
 ## Prerequisites
 
@@ -13,19 +13,14 @@ Accidentally simple
 $ make deps
 ```
 
-## Development
-
-```shell
-$ make watch
-```
-
 ## Build
 
 ```shell
 $ make build
 ```
 
-## Serve
-```
-$ make serve
+## Run
+
+```shell
+$ make run
 ```

@@ -1,0 +1,8 @@
+const { stdin, stdout } = require('process')
+const { Elm } = require('../build/elm.js')
+
+const app =
+  Elm.Elm.init()
+
+stdin.on('data', (data) => app.ports.stdin.send(data.toString()))
+app.ports.stdout.subscribe((data) => stdout.write(data))

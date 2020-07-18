@@ -1,32 +1,30 @@
-module Shell exposing (State, empty, run)
+module Shell exposing (run)
 
-import Dict exposing (Dict)
-import Do.Result as Result
-import Expr
-import Sexp
-import Scheme
-
-
-type alias State =
-    { text : String
-    , visible : Bool
-    }
+import Base exposing (..)
+import Base.IO as IO exposing (IO)
+import Base.String as String
+import Uni.Parser as Parser
+import Uni.Term as Term
 
 
-empty =
-    { text = ""
-    , visible = False
-    }
-
-
-run : Expr.Env -> State -> Result String ( State, Expr.Env )
-run env0 state =
+shell : IO Unit
+shell =
+    IO.do (IO.write "> ") <| \_ ->
+    IO.do IO.read_line <| \input ->
     let
-        result =
-            state.text
-                |> Sexp.fromString
-                |> Result.andThen Scheme.fromSexp
-                |> Result.andThen (Expr.fromLambda >> Expr.eval env0)
+        output =
+            case Parser.parse input of
+                Success [term] ->
+                    Term.to_string term
+
+                _ ->
+                    "error"
     in
-    Result.do result <| \( newAcc, env1 ) ->
-    Ok ( { state | text = "" }, Dict.insert "acc" newAcc env1 )
+    IO.do (IO.write_line output) <| \_ ->
+    shell
+
+
+run : IO Unit
+run =
+    IO.do (IO.write_line "Hi! I am Uni in the shell.") <| \_ ->
+    shell

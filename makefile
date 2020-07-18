@@ -1,14 +1,8 @@
 build:
-	./build.sh
-
-clean:
-	./clean.sh
+	npm run build-dev
 
 deps:
 	npm install
 
-serve:
-	npm run serve
-
-watch:
-	npm run watch
+run:
+	node src/app.js
