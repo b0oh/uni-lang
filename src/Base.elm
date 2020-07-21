@@ -6,11 +6,12 @@ module Base
     , constant
     , flip
     , from_maybe
+    , from_result
     )
 
 type Optional x
     = Some x
-    | None -- I would rather use nothing but it conflicts with elm stdlib
+    | None -- I would rather use Nothing but it conflicts with elm stdlib
 
 
 type Try failure success
@@ -38,6 +39,16 @@ from_maybe maybe =
 
         Nothing ->
             None
+
+
+from_result : Result r a -> Try r a
+from_result result =
+    case result of
+        Ok value ->
+            Success value
+
+        Err err ->
+            Failure err
 
 
 identity x =

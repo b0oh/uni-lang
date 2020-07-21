@@ -1,4 +1,4 @@
-module Uni.Parser exposing (parse)
+module Uni.Parser.ML exposing (parse)
 
 import Base exposing (..)
 import Parser exposing ((|.), (|=), Parser)

@@ -1,6 +1,5 @@
 module Uni.Term exposing (..)
 
-
 type Literal
     = Int Int
     | Float Float
@@ -8,33 +7,44 @@ type Literal
 
 
 type Term
-    = Abs (List String) Term
-    | App Term (List Term)
+    = Abs String Term
+    | App Term Term
     | Literal Literal
     | Symbol String
+
+
+make_abs_chain : List String -> Term -> Term
+make_abs_chain binds body =
+    let
+        step sub_binds acc =
+            case sub_binds of
+                [] ->
+                    acc
+
+                bind :: rest ->
+                    step rest (Abs bind acc)
+    in
+    step (List.reverse binds) body
 
 
 to_string : Term -> String
 to_string term =
     case term of
-        Abs syms body ->
+        Abs bind body ->
             String.concat
                 [ "(\\"
-                , syms
-                    |> String.join " "
+                , bind
                 , " -> "
                 , to_string body
                 , ")"
                 ]
 
-        App abs args ->
+        App abs arg ->
             String.concat
                 [ "("
                 , to_string abs
                 , " "
-                , args
-                    |> List.map to_string
-                    |> String.join " "
+                , to_string arg
                 , ")"
                 ]
 
@@ -48,4 +58,4 @@ to_string term =
             "(lit " ++ String.fromFloat float ++ ")"
 
         Literal (String string) ->
-            "(lit " ++ string ++ ")"
+            "(lit \"" ++ string ++ "\")"

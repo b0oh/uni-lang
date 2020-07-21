@@ -1,8 +1,10 @@
-build:
+force:
+
+build: force
 	npm run build-dev
 
-deps:
+deps: force
 	npm install
 
-run:
+run: force
 	node src/app.js

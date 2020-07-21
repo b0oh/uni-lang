@@ -1,0 +1,4 @@
+one of requiremens for naming should be simplicity of searching, try to search >>= or >=> and find a relevant documentation.
+
+snake_case over camelCase as some of semantics can be lost
+my fav is dashed-case but it suffers from searchibility
