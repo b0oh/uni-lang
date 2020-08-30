@@ -1,0 +1,12 @@
+(unquote (require (quote io/write_line)))
+(@qq require io/write_line)
+
+(@doc "identity function")
+(@type identity ((a) a -> a))
+(@set identity (a -> a))
+
+(bind
+  (write_line -> (@set write_line write_line))
+  (@require io/write_line))
+
+(write_line (@string "Hello Uni!"))

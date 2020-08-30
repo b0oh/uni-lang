@@ -1,0 +1,21 @@
+(* write : Binary -> IO Unit *)
+
+(lambda (
+  output
+  )
+    (io/make
+      (lamba (
+        next
+        )
+          (pair/make
+            (pipe
+              (parser/succeed unit)
+              (pipe
+                (parser/map next)
+                io/state/make
+              )
+            )
+          )
+      )
+    )
+)

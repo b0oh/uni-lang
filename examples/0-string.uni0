@@ -1,0 +1,22 @@
+(@set string (term ->
+  (@term/match (
+    (symbol -> (try/succeed (term/encode_string symbol)))
+    (binding -> (try/and_then try/fail list/empty))
+    (abs arg -> (try/and_then try/fail list/empty)))))))
+
+
+sigils:
+  * =
+    term ->
+      optional/nothing
+
+  (* r stands for rewrite *)
+  r =
+    term ->
+      match term with {
+        | App abs arg ->
+          optional/some ...
+
+        | _ ->
+          optional/nothing
+      }

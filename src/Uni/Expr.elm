@@ -1,10 +1,11 @@
 module Uni.Expr exposing (..)
 
 import Base exposing (..)
-import Base.Optional as Opt
+import Base.List as List
+import Base.Optional as Optional
 import Base.Try as Try
 import Dict exposing (Dict)
-import Uni.Term as Term exposing (Literal, Term)
+import Lambda.Term as Term exposing (Term)
 
 
 type alias Env =
@@ -14,26 +15,43 @@ type alias Env =
 type Expr
     = Abs String Expr
     | App Expr Expr
-    | Builtin (Env -> Expr -> Try String Expr)
+    | Builtin (Env -> List Expr -> Try String ( Expr, Env ))
     | Closure String Expr Env
-    | Literal Term.Literal
     | Var String
 
 
-empty_env =
+empty =
     Dict.empty
 
 
-apply : Env -> Expr -> Expr -> Try String Expr
-apply env abs arg =
+define =
+    Dict.insert
+
+
+apply : Env -> Expr -> List Expr -> Try String ( Expr, Env )
+apply env abs args =
+    let
+        step expr args2 =
+            case args2 of
+                [] ->
+                    Try.succeed ( expr, env )
+
+                arg :: rest ->
+                    case expr of
+                        Closure binding body closured_env ->
+                            Try.do (eval env arg) <| \( new_arg, _ ) ->
+                            Try.do (eval (define binding new_arg closured_env) body) <| \( new_expr, _ ) ->
+                            step new_expr rest
+
+                        _ ->
+                            Try.fail "can't apply"
+    in
     case abs of
         Builtin builtin ->
-            builtin env arg
+            builtin env args
 
-        Closure binding body closured_env ->
-            Try.do (eval env arg) <| \( new_arg, _ ) ->
-            Try.do (eval (Dict.insert binding new_arg closured_env) body) <| \( expr, _ ) ->
-            Try.succeed expr
+        (Closure _ _ _) as closure ->
+            step closure args
 
         _ ->
             Try.fail "can't apply"
@@ -48,10 +66,22 @@ eval env expr =
         App (Var "quote") value ->
             Try.succeed ( value, env )
 
-        App abs arg ->
-            Try.do (eval env abs) <| \( new_abs, _ ) ->
-            Try.do (apply env new_abs arg) <| \new_expr ->
-            Try.succeed ( new_expr, env )
+        (App _ _) as app ->
+            let
+                take_args term acc =
+                    case term of
+                        App abs arg ->
+                            take_args abs (List.cons arg acc)
+
+                        _ ->
+                            ( term, acc )
+
+                ( abs2, args ) =
+                    take_args app []
+            in
+            Try.do (eval env abs2) <| \( abs3, env2 ) ->
+            Try.do (apply env2 abs3 args) <| \( value, env3 ) ->
+            Try.succeed ( value, env3 )
 
         Var binding ->
             case Dict.get binding env of
@@ -74,10 +104,7 @@ from_term term =
         Term.App abs arg ->
             App (from_term abs) (from_term arg)
 
-        Term.Literal literal ->
-            Literal literal
-
-        Term.Symbol sym ->
+        Term.Var sym ->
             Var sym
 
 
@@ -86,11 +113,11 @@ to_term expr =
     case expr of
         Abs binding body ->
             to_term body
-                |> Opt.map (Term.Abs binding)
+                |> Optional.map (Term.Abs binding)
 
         App abs arg ->
-            Opt.do (to_term abs) <| \new_abs ->
-            Opt.do (to_term arg) <| \new_arg ->
+            Optional.do (to_term abs) <| \new_abs ->
+            Optional.do (to_term arg) <| \new_arg ->
             Some (Term.App new_abs new_arg)
 
         Closure binding body env ->
@@ -99,30 +126,30 @@ to_term expr =
                     case closured_expr of
                         Var sym ->
                             if List.member sym bound then
-                                Some (Term.Symbol sym)
+                                Some (Term.Var sym)
 
                             else
                                 Dict.get sym env
                                     |> from_maybe
-                                    |> Opt.and_then to_term
+                                    |> Optional.and_then to_term
 
                         Abs sym abs_body ->
                             step (sym :: bound) abs_body
-                                |> Opt.map (Term.Abs sym)
+                                |> Optional.map (Term.Abs sym)
 
                         App abs arg ->
-                            Opt.do (step bound abs) <| \new_abs ->
-                            Opt.do (step bound arg) <| \new_arg ->
+                            Optional.do (step bound abs) <| \new_abs ->
+                            Optional.do (step bound arg) <| \new_arg ->
                             Some (Term.App new_abs new_arg)
 
                         _ ->
                             to_term closured_expr
             in
             step [ binding ] body
-                |> Opt.map (Term.Abs binding)
+                |> Optional.map (Term.Abs binding)
 
         Var sym ->
-            Some (Term.Symbol sym)
+            Some (Term.Var sym)
 
         _ ->
             None

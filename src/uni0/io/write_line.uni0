@@ -1,0 +1,15 @@
+(* write_line : Binary -> IO Unit *)
+
+(binary/append <- require "binary/append")
+(io/write <- require "io/write")
+
+(lambda (
+  line
+  )
+    (io/write
+      (binary/append
+        line
+        (string "\n")
+      )
+    )
+)

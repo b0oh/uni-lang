@@ -2,3 +2,6 @@ one of requiremens for naming should be simplicity of searching, try to search >
 
 snake_case over camelCase as some of semantics can be lost
 my fav is dashed-case but it suffers from searchibility
+
+is_flag over flag?
+my fav is with ? but I had a lot of questions what the meaning of it and plus it is not "internet search friendly"

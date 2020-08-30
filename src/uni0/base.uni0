@@ -1,0 +1,52 @@
+(* Unit = Tuple 1 *)
+(* unit : Unit *)
+
+(* Pair a b *)
+(* build, pair : a -> b -> Pair a b *)
+(* unpair : Pair a b -> a -> b *)
+(* match : (a -> c) -> (b -> c) -> Pair a b -> c
+
+(* Optional a *)
+(* some : a -> Optional a *)
+(* nothing : Optional a *)
+(* match : (_ -> b) -> (a -> b) -> Optional a -> b *)
+
+(* Try *)
+
+(* List a *)
+(* empty : List a *)
+(* build, cons : a -> List a -> List a *)
+(* match : (_ -> b) -> (a -> List a -> b) -> List a -> b *)
+(* match_singleton : (_ -> b) -> (a -> b) -> b *)
+
+
+(* Thunk a = Unit -> a *)
+
+(* thunk : List Term -> Try String Term *)
+(define thunk (terms ->
+  (list/match_singleton
+    (_ -> (try/fail list/empty))
+    (term -> (try/succeed (term/make_lambda (quote _) term))))))
+
+
+(* let : List Term -> Try String Term *)
+(@define let (terms ->
+  (list/match
+    (@thunk (try/fail ""))
+    (bingings body -> )
+    terms)))
+
+
+(* char : List Term -> Try String Term *)
+(@define char (terms ->
+
+
+(* string : Term -> Try String Term *)
+(@define string (term ->
+  (@let
+    (reason (string/from_charlist (@list (@char s) (@char t) (@char r) (@char i) (@char n) (@char g))))
+    (term/match
+      (symbol -> (try/succeed symbol))
+      (binding -> (try/fail message))
+      (abs arg -> (try/fail message))
+      term))))

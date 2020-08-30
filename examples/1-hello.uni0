@@ -1,0 +1,2 @@
+(write_line <- (@require io/write_line))
+(write_line (@string "Hello Uni!"))

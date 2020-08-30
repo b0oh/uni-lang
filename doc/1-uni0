@@ -1,0 +1,58 @@
+open questions:
+does it worth to split symbolic rewriters and expr normalizers and evaluators
+
+syntax:
+symbol
+"spaced symbol"
+(div 1 2)
+(x y -> (div (div x 2) y))
+(quote expr)
+(* comment *)
+
+
+---------
+0 stage
+implicits:
+lambda: Term -> Term
+quote: Term -> Term
+
+
+symbolic macroses:
+(int symbol)
+(string symbol)
+(list expr1 expr2 ... exprn)
+
+syntax:
+var
+"spaced var"
+(x y -> (plus x y))
+(fun arg1 arg2)
+(@fun arg1 arg2)
+(quote term)
+
+implicits:
+require, bind (<-), set, string, describe
+
+(*
+
+special forms
+lambda: (arg1 arg2 -> body)
+quote: (quote term)
+
+then : forall a. Unit -> a
+
+then: (value <- then_func) => (then (quote value) then_func)
+
+string : Term -> Try String Term
+
+(define string (term ->
+  (@term/match (
+    (symbol -> (try/succeed (term/encode_string symbol)))
+    (binding -> (try/and_then try/fail (@string "not a symbol")))
+    (abs arg -> (try/and_then try/fail (@string "not a symbol")))
+  ))
+))
+
+(@string hello)
+
+*)

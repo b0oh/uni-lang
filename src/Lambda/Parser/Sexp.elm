@@ -1,10 +1,10 @@
-module Uni.Parser.Sexp exposing (parse)
+module Lambda.Parser.Sexp exposing (parse)
 
 import Base exposing (..)
 import Base.List as List
 import Base.Try as Try
 import Sexp exposing (Sexp)
-import Uni.Term as Term exposing (Literal, Term)
+import Lambda.Term as Term exposing (Term)
 
 
 from_sexp : Sexp -> Try String Term
@@ -30,39 +30,55 @@ from_sexp sexp =
             Try.do (from_sexp body) <| \new_body ->
             Try.succeed (Term.make_abs_chain bindings new_body)
 
-        make_app_acc exprs acc =
-            case exprs of
-                [] ->
-                    Try.succeed acc
-
-                expr :: rest ->
-                    Try.do (from_sexp expr) <| \term ->
-                    make_app_acc rest (Term.App acc term)
-
         make_app exprs =
+            let
+                step exprs_ acc =
+                    case exprs_ of
+                        [] ->
+                            Try.succeed acc
+
+                        expr :: rest ->
+                            Try.do (from_sexp expr) <| \term ->
+                            step rest (Term.App acc term)
+            in
             case exprs of
                 abs :: arg :: args ->
                     Try.do (from_sexp abs) <| \abs_term ->
                     Try.do (from_sexp arg) <| \arg_term ->
-                    make_app_acc args (Term.App abs_term arg_term)
+                    step args (Term.App abs_term arg_term)
 
                 _ ->
                     Try.fail "too few terms applied"
     in
     case sexp of
         Sexp.Symbol sym ->
-            Try.succeed (Term.Symbol sym)
+            Try.succeed (Term.Var sym)
 
-        Sexp.List ((Sexp.Symbol "lambda") :: rest) ->
-            case rest of
-                [ Sexp.List args, body ] ->
-                    make_abs args body
+        Sexp.List ((abs :: arg :: _) as tokens) ->
+            let
+                strings =
+                    List.map
+                        (\token ->
+                             case token of
+                                 Sexp.Symbol sym ->
+                                     sym
 
-                _ ->
-                    Try.fail "syntax error in lambda definition"
+                                 _ ->
+                                     ""
+                        )
+                        tokens
+            in
+            case List.elem_index "->" strings of
+                None ->
+                    make_app tokens
 
-        Sexp.List (abs :: arg :: args) ->
-            make_app (abs :: arg :: args)
+                Some index ->
+                    case List.split_at index tokens of
+                        ( args, [ arrow_token, body ] ) ->
+                            make_abs args body
+
+                        _ ->
+                            Try.fail "syntax error in lambda definition"
 
         _ ->
             Try.fail "syntax error"

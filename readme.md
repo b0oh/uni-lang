@@ -22,5 +22,5 @@ $ make build
 ## Run
 
 ```shell
-$ make run
+$ bin/uni
 ```
