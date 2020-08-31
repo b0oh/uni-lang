@@ -10,10 +10,10 @@ import Uni.Expr as Expr exposing (Expr)
 
 define env exprs =
     case exprs of
-        [ binding, value ] ->
+        [ Expr.Var binding, value ] ->
             case Expr.eval env value of
                 Success ( value2, env2 ) ->
-                    Try.succeed ( value2, Expr.define "x" value2 env2 )
+                    Try.succeed ( value2, Expr.define binding value2 env2 )
 
                 Failure reason ->
                     Try.fail reason
