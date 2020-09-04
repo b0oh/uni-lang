@@ -30,6 +30,24 @@ map fn optional =
             Base.None
 
 
+none =
+    Base.None
+
+
+or_then : Optional a -> Optional a -> Optional a
+or_then optional then_ =
+    case optional of
+        Base.None ->
+            then_
+
+        _ ->
+            optional
+
+
+some =
+    Base.Some
+
+
 with_default : a -> Optional a -> a
 with_default default optional =
     case optional of

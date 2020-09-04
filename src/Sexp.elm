@@ -1,4 +1,9 @@
-module Sexp exposing (Sexp(..), fromString)
+module Sexp exposing (Sexp(..), from_string)
+
+import Base exposing (..)
+import Base.Try as Try
+import Base.String as String
+
 
 type Sexp
     = Symbol String
@@ -6,48 +11,53 @@ type Sexp
 
 
 type alias State =
-    { result : Sexp, leftover : String }
+    { result : Sexp
+    , leftover : String
+    }
 
 
-closeParen =
+close_paren =
     Char.fromCode 41
 
 
-openParen =
+open_paren =
     Char.fromCode 40
 
 
-isWhite : Char -> Bool
-isWhite char =
-    List.member char (String.toList " \n")
+is_white : Char -> Bool
+is_white char =
+    List.member char (String.to_list " \n")
 
 
-isSymbolDelimiter : Char -> Bool
-isSymbolDelimiter char =
-    isWhite char || char == openParen || char == closeParen
+is_symbol_delimiter : Char -> Bool
+is_symbol_delimiter char =
+    is_white char || char == open_paren || char == close_paren
 
 
-isSymbolChar char =
-    not (isSymbolDelimiter char)
+is_symbol_char char =
+    not (is_symbol_delimiter char)
 
 
-readSpacedSymbol : String -> String -> Result String State
-readSpacedSymbol input acc =
+read_quoted_symbol : String -> String -> Try String State
+read_quoted_symbol input acc =
     case String.uncons input of
         Nothing ->
-            Err "expected to see \""
+            Try.fail "expected to see \""
 
         Just ( char, rest ) ->
             if char == '"' then
-                Ok { result = Symbol (String.reverse acc), leftover = rest }
+                Try.succeed
+                    { result = Symbol (String.reverse acc)
+                    , leftover = rest
+                    }
 
             else
                 String.cons char acc
-                    |> readSpacedSymbol rest
+                    |> read_quoted_symbol rest
 
 
-readSymbol : String -> String -> State
-readSymbol input acc =
+read_symbol : String -> String -> State
+read_symbol input acc =
     case String.uncons input of
         Nothing ->
             { result = Symbol (String.reverse acc)
@@ -55,68 +65,63 @@ readSymbol input acc =
             }
 
         Just ( char, rest ) ->
-            if isSymbolDelimiter char then
+            if is_symbol_delimiter char then
                 { result = Symbol (String.reverse acc)
                 , leftover = input
                 }
 
             else
                 String.cons char acc
-                    |> readSymbol rest
+                    |> read_symbol rest
 
 
-readList : String -> List Sexp -> Result String State
-readList input acc =
+read_list : String -> List Sexp -> Try String State
+read_list input acc =
     case String.uncons input of
         Nothing ->
-            Err "unexpected end of input"
+            Try.fail "unexpected end of input"
 
         Just ( char, rest ) ->
-            if isWhite char then
-                readList rest acc
+            if is_white char then
+                read_list rest acc
 
-            else if char == closeParen then
-                Ok { result = List (List.reverse acc), leftover = rest }
+            else if char == close_paren then
+                Try.succeed
+                    { result = List (List.reverse acc)
+                    , leftover = rest
+                    }
 
             else
-                case readAny input of
-                    Err reason ->
-                        Err reason
-
-                    Ok { result, leftover } ->
-                        readList leftover (result :: acc)
+                Try.do (read_any input) <| \{ result, leftover } ->
+                read_list leftover (result :: acc)
 
 
-readAny : String -> Result String State
-readAny input =
+read_any : String -> Try String State
+read_any input =
     case String.uncons input of
         Nothing ->
-            Err "unexpected end of input"
+            Try.fail "unexpected end of input"
 
         Just ( char, rest ) ->
-            if isWhite char then
-                readAny rest
+            if is_white char then
+                read_any rest
 
-            else if char == openParen then
-                readList rest []
+            else if char == open_paren then
+                read_list rest []
 
             else if char == '"' then
-                readSpacedSymbol rest ""
+                read_quoted_symbol rest ""
 
-            else if isSymbolChar char then
-                String.fromChar char
-                    |> readSymbol rest
-                    |> Ok
+            else if is_symbol_char char then
+                String.from_char char
+                    |> read_symbol rest
+                    |> Try.succeed
 
             else
-                Err ("unexpected symbol: " ++ String.fromChar char)
+                Try.fail ("unexpected symbol: " ++ String.from_char char)
 
 
-fromString : String -> Result String Sexp
-fromString input =
-    case readAny input of
-        Err reason ->
-            Err reason
-
-        Ok { result } ->
-            Ok result
+from_string : String -> Try String Sexp
+from_string input =
+    read_any input
+        |> Try.map .result

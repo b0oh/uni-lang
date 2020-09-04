@@ -1,0 +1,32 @@
+decode_lists : Term -> Optional Decoded
+decode_lists term =
+    @let
+        is_printable code =
+            code >= 9 && code < 127
+
+        get_code element =
+            @match element {
+            | Byte byte ->
+                @binary/byte_to_int byte
+
+            | Nat code ->
+                code
+
+            _ ->
+                0
+            }
+    in
+    @optional/do {
+        list <- decode_list_aux term
+        @match (list/all (get_code >> is_printable) list) {
+        | True ->
+            list
+                |> list/map (get_code >> char/from_code)
+                |> string/from_list
+                |> Charlist
+                |> optional/some
+
+        | False ->
+            optional/some (List list)
+        }
+    }

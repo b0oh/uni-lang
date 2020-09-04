@@ -3,6 +3,10 @@ module Base.List exposing (..)
 import Base exposing (..)
 
 
+concat_map =
+    List.concatMap
+
+
 cons : a -> List a -> List a
 cons =
     (::)
@@ -25,6 +29,10 @@ find_index =
                         step (index + 1) predicate xs
     in
     step 0
+
+
+fold_left =
+    List.foldl
 
 
 elem_index : a -> List a -> Optional Int

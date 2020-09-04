@@ -86,6 +86,5 @@ from_sexp sexp =
 
 parse : String -> Try String Term
 parse input =
-    Sexp.fromString input
-        |> from_result
+    Sexp.from_string input
         |> Try.and_then from_sexp

@@ -7,6 +7,11 @@ module Base.Binary exposing
     , to_string
     )
 
+import Base.Int as Int
+import Base.List as List
+import Base.String as String
+
+
 type Bit
     = Zero
     | One
@@ -49,26 +54,26 @@ byte_to_int { first, second, third, fourth, fifth, sixth, seventh, eighth } =
 from_int : Int -> List Bit
 from_int int =
     let
-        step acc int_ =
+        step acc int2 =
             let
                 bit =
-                    if remainderBy 2 int_ == 0 then
+                    if Int.remainder_by 2 int2 == 0 then
                         Zero
 
                     else
                         One
 
-                new_acc =
+                acc2 =
                     bit :: acc
 
                 next =
-                    int_ // 2
+                    int2 // 2
             in
             if next > 0 then
-                step new_acc next
+                step acc2 next
 
             else
-                List.reverse new_acc
+                List.reverse acc2
     in
     step [] int
 
@@ -88,8 +93,8 @@ from_string string =
                     []
     in
     string
-        |> String.toList
-        |> List.concatMap map_char
+        |> String.to_list
+        |> List.concat_map map_char
 
 
 to_string : List Bit -> String
@@ -105,4 +110,4 @@ to_string bits =
     in
     bits
         |> List.map map_bit
-        |> String.fromList
+        |> String.from_list
